@@ -1,27 +1,28 @@
 # Streaming data from a transactional database to a data warehouse using Kafka (Confluent), Snowflake, and PostgreSQL.
 
-TODO: Watch demo on youtube.
+TODO:
 
-TODO: Read Medium blog.
+Watch a demo on youtube here.
 
-TODO: Read https://pages.github.com/.
+Read the Medium blog post here.
 
 ## Architecture Overview
 ![architecture](/images/architecture.png)
 
 ## Project Description
-TODO: Intro, what's this?
+This is a Data Engineering end to end project meant to demonstrate how to unlock real-time insights from a transactional database in real-time. 
 
-TODO: Why Streaming data pipelines?
+Unlocking real-time insights requires a streaming architecture that’s continuously ingesting, processing, and provisioning data in real time. This is where Kafka (Confluent) comes into play. Finally, a data warehouse like Snowflake comes in handy to run your analytical queries and dashboards from where you can extract insights.
 
-TODO: Dataset inspired by [this](https://developer.confluent.io/tutorials/survey-responses/ksql.html).
+### Why Streaming data pipelines? 
+Analyzing the events in real-time ​as opposed to batch ​gives the flexibility to see outcomes as they occur or in a windowed fashion depending on the consuming application.
 
-TODO: Explain dataset.
-
+### Stream Processing vs Batch Processing
+[Here](https://www.confluent.io/learn/batch-vs-real-time-data-processing/#:~:text=Key%20Differences%20and%20Considerations) you can find some of the key differences and considerations. Many companies are finding that they need a modern, real-time data architecture to unlock the full potential of their data, regardless where it resides. Where some real-time data processing is required for real-time insights, persistent storage is required to enable advanced analytical functions like predictive analytics or machine learning. This is where a full-fledged data streaming platform like Confluent comes in.
 
 ## Tutorial
 ### 1. Store credentials
-Create an environment file (.env) to manage all the values you'll need through the setup.
+Create an environment file (.env) to manage all the values you'll need through the setup. [This](.env.example) is an example of a .env file.
 ### 2. Prerequisites
 #### AWS
 [Amazon Web Services](https://aws.amazon.com/what-is-aws/) (AWS) is the world’s most comprehensive and broadly adopted cloud, offering over 200 fully featured services from data centers globally.
@@ -82,48 +83,61 @@ Make sure to select AWS us-east-1. Then, follow the following:
     ```
 ### 3. AWS
 #### Create RDS PostgreSQL Database
-TODO:
 
+[PostgreSQL](https://aws.amazon.com/rds/postgresql/) has become the preferred open source relational database for many enterprise developers and startups, powering leading business and mobile applications. Amazon RDS makes it easier to set up, operate, and scale PostgreSQL deployments on the cloud. With Amazon RDS, you can deploy scalable PostgreSQL deployments in minutes with cost-efficient and resizable hardware capacity. Amazon RDS manages complex and time-consuming administrative tasks such as PostgreSQL software installation and upgrades, storage management, replication for high availability and read throughput, and backups for disaster recovery.
 
+First, let's create a new [parameter group](https://docs.confluent.io/cloud/current/connectors/cc-postgresql-cdc-source-debezium.html#:~:text=A%20parameter-,group,-with%20the%20property) with the property rds.logical_replication set to 1. This is required is required to be able to connect to Kafka.
 
-Select us-east-1 
--> postgres 
--> free tier 
--> [public access enabled](https://docs.confluent.io/cloud/current/connectors/cc-postgresql-cdc-source-debezium.html#:~:text=Services%20is%20enabled.-,Public,-access%20may%20be) 
--> add port to security group [access rules](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_ConnectToPostgreSQLInstance.html#USER_ConnectToPostgreSQLInstance.psql:~:text=By%20far%20the-,most%20common,-connection%20problem%20is)
--> A [parameter group](https://docs.confluent.io/cloud/current/connectors/cc-postgresql-cdc-source-debezium.html#:~:text=A%20parameter-,group,-with%20the%20property) with the property rds.logical_replication=1 is required 
--> create a new one (don't use the defaul one) 
--> [associate](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_WorkingWithDBInstanceParamGroups.html#:~:text=RDS%20API-,Associating,-a%20DB%20parameter) it with the DB instance 
--> reboot the database.
-
+Let's create a new database on AWS by following these steps:
+- First, make sure you are on US East 1.
+- Secondly, navigate to RDS (Managed Relational Database Service).
+- Then, click on Create database.
+  - **Engine type:** select PostgreSQL.
+  - **Templates:** select Free tier.
+  - **DB instance identifier:** postgres-cdc.
+  - **Master username:** Type a username and store it in the .env file for later use.
+  - **Master password:** Type a password or let AWS create one for you and store it in the .env file for later use.
+  - **DB instance class:** Select a micro type of instance.
+  - **Public access:** Yes. It is important to have the [public access enabled](https://docs.confluent.io/cloud/current/connectors/cc-postgresql-cdc-source-debezium.html#:~:text=Services%20is%20enabled.-,Public,-access%20may%20be) to be able to connect to Kafka.
+  - **Database port:** Type 5432 and store it in the .env file for later use.
+  - **DB parameter group:** Select the one we just created, it is called `cdc`.
+  - Leave the rest of the configuration as they appear by default.
+  - Finally, click on Create database, and wait a few minutes while it gets created.
+  - You should be able to see the Endpoint which should be something similar to `database-postgres-1.c0lxvocrw0de.us-east-1.rds.amazonaws.com`. Store it on the .env file for later use.
+- Now, to connect to a DB instance from outside its VPC, the DB instance must be publicly accessible. Also, access must be granted using the [inbound rules](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_ConnectToPostgreSQLInstance.html#USER_ConnectToPostgreSQLInstance.psql:~:text=By%20far%20the-,most%20common,-connection%20problem%20is) of the DB instance's security group.
+  - Go to Security Groups
+  - Select the DB instance's security group.
+  - Click on `Edit inbound rules`.
+  - Add a new rule for the port `5432` and source `Anywhere-IPv4`.
+  - Click on save rules, and you are all set.
 
 Connect to database via Terminal:
 ```bash
 brew install postgresql
 ```
 
-Connect to db
+Connect to database
 ``` bash
 psql --host=database-postgres-1.c0lxvocrw0de.us-east-1.rds.amazonaws.com --port=5432 --username=douglaspostgres --password --dbname=postgres
 ```
 
 Set up database
-Create tables running this script:
-[Script](/aws/postgres-rds/create_tables.sql)
+Create tables by running this script: [Script](/aws/postgres-rds/create_tables.sql)
 
-List tables, [see more](https://dbschema.com/2020/04/14/postgresql-show-tables/)
+Verify that the tables were created by listing them with the following command (see more commands [here](https://dbschema.com/2020/04/14/postgresql-show-tables/)):
 ```SQL
  \dt
 ```
 
-
-
-
 Data model of the transactional database
+
 ![datamodel](/images/transactional-data-model.png)
 
+The data model we are going to use in this project was inspired by [this](https://developer.confluent.io/tutorials/survey-responses/ksql.html). Basically, this project is based on a Survey Web Application as surveys are great ways for businesses to capture insights from their customers and even their employees. But these insights go stale and lose value the longer they take to be analyzed. This recipe makes survey analysis real-time, allowing you to see results as survey responses happen.
+
 #### Generate Mock Data
-Run this [Python Script](/aws/postgres-rds/generate_mock-data.py) to emulate transactions in real-time
+Run this [Python Script](/aws/postgres-rds/generate_mock-data.py) to emulate transactions in real-time.
+
 ```bash
 sudo pip3 install virtualenv
 
@@ -140,7 +154,7 @@ python3 aws/postgres-rds/generate_mock-data.py
 deactivate
 ```
 
-#### Generate real data
+#### Generate Real data with a Web App
 TODO:
 
 ##### Deploy Web App with API Gateway and Lambda
@@ -172,7 +186,13 @@ Let's set up the connector by following these steps:
   - `postgres_cdc.public.survey_respondents`
   - `postgres_cdc.public.survey_responses`
 
+Output example:
+
+![messages topic](/images/topic_postgres.png)
+
 #### Stream processing - KsqlDB
+[Streaming data processing](https://www.confluent.io/learn/batch-vs-real-time-data-processing/#:~:text=weekly%20or%20monthly.-,Streaming%20data%20processing,-happens%20as%20the) happens as the data flows through a system. This results in analysis and reporting of events as it happens. An example would be fraud detection or intrusion detection. Streaming data processing means that the data will be analyzed and that actions will be taken on the data within a short period of time or near real-time, as best as it can.
+
 Create a [KsqlDB Cluster](https://docs.confluent.io/cloud/current/get-started/index.html#section-2-add-ksql-cloud-to-the-cluster:~:text=Confluent%20Cloud.-,Step%201,-%3A%20Create%20a%20ksqlDB) in Confluent Cloud by selecting ksqlDb in the left side pane. Wait a few minutes while the Cluster is provisioned.
 
 Navigate to the ksqlDB editor, ksqlDB supports SQL language for extracting, transforming, and loading events within your Kafka cluster. ksqlDB processes data in realtime, and in this case we want to enrich the Suvey Responses with the Survey Respondent data.
@@ -220,7 +240,7 @@ EMIT CHANGES;
 
 Output example:
 
-TODO: Insert image
+![ksql query](/images/ksql_output.png)
 
 Push queries are identified by the **EMIT CHANGES** clause. By running a push query, the client will receive a message for every change that occurs on the stream (that is, every new message).
 
@@ -228,7 +248,7 @@ View entire script [here](confluent/ksql.sql)
 
 If you want to learn more about 
 #### Snowflake Sink Kafka Connector
-Now, let's send the resulting data from the Kafka Topic `topic_survey_responses_enriched` to our Data Warehouse in Snowflake.
+Now, let's send the resulting data from the Kafka Topic `topic_survey_responses_enriched` to our Data Warehouse in Snowflake unlocking real-time analytics and decision-making.
 
 In order to do this, let's set up a new Kafka Connector called [Snowflake Sink Kafka Connector](https://docs.snowflake.com/en/user-guide/kafka-connector-overview) by following these steps.
 - Open Confluent Cloud.
@@ -292,6 +312,7 @@ FROM TOPIC_SURVEY_RESPONSES_ENRICHED
 ```
 
 Data model of the analytical database
+
 ![datamodel_analytical](/images/analytical-data-model.png)
 
 Finally, let's answer some business questions by creating analytical queries. For example: which superheroes does each generation preffer?
@@ -313,7 +334,8 @@ Output example:
 
 View entire script [here](snowflake/snowflake.sql)
 
-### Learnings
-TODO:
+### Learnings, and next steps.
+- Data Streaming is now easier and more accesible for everyone to learn and use.
+- You can create awesome Data Engineering projects without paying anything as most services offer a free trial.
 - This project was intended as a PoC and it is not recommended for production environments as we are not taking care of security actions such as granular access and networking.
-- Use Terraform as Infrastructure-as-Code (IaC) tool. Use Terraform to spin up cloud resources in the cloud
+- Use Terraform as Infrastructure-as-Code (IaC) tool. Use Terraform to spin up cloud resources in the cloud.
