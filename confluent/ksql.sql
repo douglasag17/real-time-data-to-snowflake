@@ -1,43 +1,17 @@
--- Ensure topics are read from beginning
+-- 1. Ensure topics are read from beginning
 SET 'auto.offset.reset' = 'earliest';
 
--- Create stream for survey_respondents
-CREATE OR REPLACE STREAM SURVEY_RESPONDENTS_STREAM (
-    RESPONDENT_ID INTEGER,
-    NAME VARCHAR,
-    GENERATION VARCHAR,
-    CREATED_AT VARCHAR
-)
-WITH (
-    KAFKA_TOPIC = 'postgres_cdc.public.survey_respondents',
-    VALUE_FORMAT = 'JSON',
-    KEY_FORMAT='NONE'
-)
-;
+-- 2. Create stream for survey_respondents
 
--- Create stream for survey_responses
-CREATE OR REPLACE STREAM SURVEY_RESPONSES_STREAM (
-    RESPONSE_ID INTEGER,
-    RESPONDENT_ID INTEGER,
-    QUESTION VARCHAR,
-    ANSWER VARCHAR,
-    IS_REAL BOOLEAN,
-    CREATED_AT VARCHAR
-)
-WITH (
-    KAFKA_TOPIC = 'postgres_cdc.public.survey_responses',
-    VALUE_FORMAT = 'JSON',
-    KEY_FORMAT='NONE'
-)
-;
+-- 3. Create stream for survey_responses
 
--- Create stream joining both streams
-CREATE OR REPLACE STREAM SURVEY_RESPONSES_ENRICHED
+-- 4. Create stream joining both streams
+CREATE STREAM SURVEY_RESPONSES_ENRICHED
 WITH (
     KAFKA_TOPIC = 'topic_survey_responses_enriched',
-    VALUE_FORMAT = 'JSON',
-    KEY_FORMAT = 'JSON',
-    PARTITIONS = 6
+    VALUE_FORMAT = 'JSON_SR',
+    KEY_FORMAT = 'JSON_SR',
+    PARTITIONS = 1
 ) AS
 SELECT
     R.RESPONDENT_ID AS RESPONDENT_ID,
@@ -48,13 +22,13 @@ SELECT
     R.ANSWER AS ANSWER,
     R.IS_REAL AS IS_REAL,
     R.CREATED_AT AS CREATED_AT
-FROM SURVEY_RESPONSES_STREAM R
-INNER JOIN SURVEY_RESPONDENTS_STREAM T WITHIN 10 MINUTES GRACE PERIOD 2 MINUTES
+FROM POSTGRES_CDCPUBLICSURVEY_RESPONSES R
+INNER JOIN POSTGRES_CDCPUBLICSURVEY_RESPONDENTS T WITHIN 10 MINUTES GRACE PERIOD 2 MINUTES
     ON R.RESPONDENT_ID = T.RESPONDENT_ID
 EMIT CHANGES
 ;
 
--- Verify streams and table
+-- 5. Verify streams and table
 SHOW STREAMS;
 
 SELECT *

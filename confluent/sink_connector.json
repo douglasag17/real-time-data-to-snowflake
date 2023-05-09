@@ -1,0 +1,26 @@
+{
+    "name": "SnowflakeSinkConnector",
+    "config": {
+        "topics": "topic_survey_responses_enriched",
+        "input.data.format": "JSON_SR",
+        "input.key.format": "JSON_SR",
+        "connector.class": "SnowflakeSink",
+        "name": "SnowflakeSinkConnector",
+        "kafka.auth.mode": "KAFKA_API_KEY",
+        "kafka.api.key": "<CONFLUENT_API_KEY>",
+        "kafka.api.secret": "<CONFLUENT_API_SECRET>",
+        "snowflake.url.name": "<SNOWFLAKE_LOCATOR>",
+        "snowflake.user.name": "<SNOWFLAKE_USERNAME>",
+        "snowflake.private.key": "<SNOWFLAKE_PRIVATE_KEY>",
+        "snowflake.database.name": "<SNOWFLAKE_DB>",
+        "snowflake.schema.name": "<SNOWFLAKE_SCHEMA>",
+        "snowflake.metadata.createtime": "true",
+        "snowflake.metadata.topic": "true",
+        "snowflake.metadata.offset.and.partition": "true",
+        "snowflake.metadata.all": "true",
+        "buffer.flush.time": "120",
+        "buffer.count.records": "10000",
+        "buffer.size.bytes": "10000000",
+        "tasks.max": "1"
+    }
+}
