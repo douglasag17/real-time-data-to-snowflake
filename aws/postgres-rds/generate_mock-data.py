@@ -6,6 +6,7 @@ from faker import Faker
 import random
 
 
+# From which generation are you?
 GENERATIONS = [
     "The Silent Generation: Born 1928-1945",
     "Baby Boomers: Born 1946-1964",
@@ -13,6 +14,9 @@ GENERATIONS = [
     "Millennials: Born 1981-1996",
     "Generation Z: Born 1997-2012",
 ]
+
+# From 0-5 how satisfied are you with this survey?
+SATISFACTION_GRADE = [0, 1, 2, 3, 4, 5]
 
 QUESTIONS = {
     "Q1": {"Q": "I consider myself:", "A": ["Extroverted", "Introverted"]},
@@ -37,8 +41,8 @@ QUESTIONS = {
     },
     "Q9": {"Q": "What is a better dessert:", "A": ["Ice Cream", "Cake"]},
     "Q10": {
-        "Q": "When it comes to sleeping:",
-        "A": ["I sleep with my socks on", "I sleep with my socks off"],
+        "Q": "iOS or Android?",
+        "A": ["iOS", "Android"],
     },
 }
 
@@ -51,11 +55,13 @@ def add_row(cursor, fake):
             RESPONDENT_ID,
             NAME,
             GENERATION,
+            SATISFACTION,
             CREATED_AT
         ) VALUES (
             DEFAULT,
             '{fake.name()}',
             '{GENERATIONS[random.randint(0, len(GENERATIONS)-1)]}',
+            {SATISFACTION_GRADE[random.randint(0, len(SATISFACTION_GRADE)-1)]},
             DEFAULT
         )
         RETURNING RESPONDENT_ID
