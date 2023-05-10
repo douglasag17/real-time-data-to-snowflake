@@ -131,7 +131,7 @@ Verify that the tables were created by listing them with the following command (
 
 Data model of the transactional database
 
-![datamodel](/images/transactional-data-model.png)
+![datamodel](/images/transactional_data_model.png)
 
 The data model we are going to use in this project was inspired by [this](https://developer.confluent.io/tutorials/survey-responses/ksql.html). Basically, this project is based on a Survey Web Application as surveys are great ways for businesses to capture insights from their customers and even their employees. But these insights go stale and lose value the longer they take to be analyzed. This recipe makes survey analysis real-time, allowing you to see results as survey responses happen.
 
@@ -315,7 +315,7 @@ FROM TOPIC_SURVEY_RESPONSES_ENRICHED
 
 Data model of the analytical database
 
-![datamodel_analytical](/images/analytical-data-model.png)
+![datamodel_analytical](/images/analytical_data_model.png)
 
 Finally, let's answer some business questions by creating analytical queries. For example: which superheroes does each generation preffer?
 
