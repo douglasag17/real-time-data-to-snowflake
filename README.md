@@ -311,7 +311,7 @@ Data model of the analytical database
 
 ![datamodel_analytical](/images/analytical_data_model.png)
 
-Finally, let's answer some business questions by creating analytical queries. For example: which superheroes does each generation preffer?
+Let's answer some business questions by creating analytical queries. For example: which superheroes does each generation preffer?
 
 ```SQL
 SELECT
@@ -327,6 +327,18 @@ ORDER BY 1 DESC, 3 DESC
 
 Output example:
 ![datamodel_analytical](/images/snowflake_query.png)
+
+Finally, let's see if people liked the survey!
+
+```SQL
+SELECT
+    GENERATION,
+    AVG(SATISFACTION) AS AMOUNT
+FROM TOPIC_SURVEY_RESPONSES_ENRICHED_VIEW
+GROUP BY 1
+ORDER BY 2 DESC
+;
+```
 
 View entire script [here](snowflake/snowflake.sql)
 
