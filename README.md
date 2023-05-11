@@ -4,7 +4,7 @@
 ![architecture](/images/architecture.png)
 
 ## Project Description
-This is a Data Engineering end to end project meant to demonstrate how to unlock real-time insights from a transactional database in real-time.
+This is a Data Engineering end to end project meant to demonstrate how to unlock real-time insights from a transactional database.
 
 Unlocking real-time insights requires a streaming architecture that’s continuously ingesting, processing, and provisioning data in real time. This is where Kafka (Confluent) comes into play. Finally, a data warehouse like Snowflake comes in handy to run your analytical queries and dashboards from where you can extract insights.
 
