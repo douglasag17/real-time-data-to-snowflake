@@ -1,20 +1,14 @@
 # Streaming data from a transactional database to a data warehouse using Kafka (Confluent), Snowflake, and PostgreSQL.
 
-TODO:
-
-Watch a demo on youtube here.
-
-Read the Medium blog post here.
-
 ## Architecture Overview
 ![architecture](/images/architecture.png)
 
 ## Project Description
-This is a Data Engineering end to end project meant to demonstrate how to unlock real-time insights from a transactional database in real-time. 
+This is a Data Engineering end to end project meant to demonstrate how to unlock real-time insights from a transactional database in real-time.
 
 Unlocking real-time insights requires a streaming architecture that’s continuously ingesting, processing, and provisioning data in real time. This is where Kafka (Confluent) comes into play. Finally, a data warehouse like Snowflake comes in handy to run your analytical queries and dashboards from where you can extract insights.
 
-### Why Streaming data pipelines? 
+### Why Streaming data pipelines?
 Analyzing the events in real-time ​as opposed to batch ​gives the flexibility to see outcomes as they occur or in a windowed fashion depending on the consuming application.
 
 ### Stream Processing vs Batch Processing
@@ -136,7 +130,7 @@ Data model of the transactional database
 The data model we are going to use in this project was inspired by [this](https://developer.confluent.io/tutorials/survey-responses/ksql.html). Basically, this project is based on a Survey Web Application as surveys are great ways for businesses to capture insights from their customers and even their employees. But these insights go stale and lose value the longer they take to be analyzed. This recipe makes survey analysis real-time, allowing you to see results as survey responses happen.
 
 #### Generate Mock Data
-Run this [Python Script](/aws/postgres-rds/generate_mock-data.py) to emulate transactions in real-time.
+Run this [Python Script](/aws/postgres-rds/generate_mock_data.py) to emulate transactions in real-time.
 
 ```bash
 sudo pip3 install virtualenv
@@ -149,7 +143,7 @@ pip3 install requirements.txt
 
 pip3 freeze
 
-python3 aws/postgres-rds/generate_mock-data.py 
+python3 aws/postgres-rds/generate_mock_data.py
 
 deactivate
 ```
@@ -247,7 +241,7 @@ Push queries are identified by the **EMIT CHANGES** clause. By running a push qu
 
 View entire script [here](confluent/ksql.sql)
 
-If you want to learn more about 
+If you want to learn more about
 #### Snowflake Sink Kafka Connector
 Now, let's send the resulting data from the Kafka Topic `topic_survey_responses_enriched` to our Data Warehouse in Snowflake unlocking real-time analytics and decision-making.
 
@@ -282,7 +276,7 @@ DESC STAGE SNOWFLAKE_KAFKA_CONNECTOR_LCC_8WXGX5_1146345676_STAGE_TOPIC_SURVEY_RE
 
 DESC PIPE SNOWFLAKE_KAFKA_CONNECTOR_LCC_8WXGX5_1146345676_PIPE_TOPIC_SURVEY_RESPONSES_ENRICHED_0;
 
-SELECT 
+SELECT
     TO_TIMESTAMP_NTZ(RECORD_CONTENT:CREATED_AT::VARCHAR) AS CREATED_AT,
     RECORD_CONTENT,
     RECORD_METADATA

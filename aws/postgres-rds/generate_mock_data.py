@@ -43,13 +43,13 @@ QUESTIONS = {
     "Q10": {
         "Q": "iOS or Android?",
         "A": ["iOS", "Android"],
-    },
+    }
 }
 
 
 def add_row(cursor, fake):
-    # Insert into SURVEY_RESPONDENTS
 
+    # Insert into SURVEY_RESPONDENTS
     dml_survey_respondents = f"""
         INSERT INTO SURVEY_RESPONDENTS (
             RESPONDENT_ID,
@@ -114,7 +114,7 @@ def main():
             while True:
                 add_row(cursor, fake)
                 conn.commit()
-                time.sleep(10)
+                time.sleep(2)
         except KeyboardInterrupt:
             print("\nclosing")
 
