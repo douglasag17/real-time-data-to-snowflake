@@ -151,6 +151,28 @@ deactivate
 #### Generate Real data with a Web App
 TODO:
 
+#### Run Web App Locally
+Run the following in your local Terminal:
+```bash
+sudo pip3 install virtualenv
+
+virtualenv pyvenv
+
+source aws/pyvenv/bin/activate
+
+pip3 install requirements.txt
+
+cd aws/api
+
+uvicorn main:app --reload
+
+deactivate
+```
+
+Then, visit [http://127.0.0.1:8000](http://127.0.0.1:8000) in your browser. You should see the Web App now.
+
+![local web app](/images/local_web_app.png)
+
 ##### Deploy Web App with API Gateway and Lambda
 TODO:
 

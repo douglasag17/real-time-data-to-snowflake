@@ -30,25 +30,23 @@ QUESTIONS = {
         "A": ["I pour the cereal first", "I pour the milk first"],
     },
     "Q5": {"Q": "What came first:", "A": ["The Egg", "The chicken"]},
-    "Q6": {"Q": "A hot dog is a sandwich?", "A": ["Yes", "No"]},
-    "Q7": {
+    "Q6": {
         "Q": "When it comes to superheroes:",
         "A": ["I prefer DC", "I prefer Marvel"],
     },
-    "Q8": {
+    "Q7": {
         "Q": "When it comes to pets:",
         "A": ["I am a Cat person", "I am a Dog person", "Other"],
     },
-    "Q9": {"Q": "What is a better dessert:", "A": ["Ice Cream", "Cake"]},
-    "Q10": {
+    "Q8": {"Q": "What is a better dessert:", "A": ["Ice Cream", "Cake"]},
+    "Q9": {
         "Q": "iOS or Android?",
         "A": ["iOS", "Android"],
-    }
+    },
 }
 
 
 def add_row(cursor, fake):
-
     # Insert into SURVEY_RESPONDENTS
     dml_survey_respondents = f"""
         INSERT INTO SURVEY_RESPONDENTS (
