@@ -112,7 +112,7 @@ brew install postgresql
 
 Connect to database
 ``` bash
-psql --host=database-postgres-1.c0lxvocrw0de.us-east-1.rds.amazonaws.com --port=5432 --username=douglaspostgres --password --dbname=postgres
+psql --host=postgres-cdc.cpnjzqjge3k1.us-east-1.rds.amazonaws.com --port=5432 --username=postgres --password --dbname=postgres
 ```
 
 Set up database
@@ -243,26 +243,6 @@ You should see that 2 streams were created called:
 - `POSTGRES_CDCPUBLICSURVEY_RESPONSES`
 - `POSTGRES_CDCPUBLICSURVEY_RESPONDENTS`
 
-Now, let's create a table with the respondents data. Remember that Streams are unbounded series of events, while tables are the current state of a given key.
-
-```SQL
-CREATE TABLE SURVEY_RESPONDENTS
-WITH (
-    FORMAT = 'JSON_SR'
-)
-AS
-SELECT
-    RESPONDENT_ID AS RESPONDENT_ID,
-    LATEST_BY_OFFSET(NAME) AS NAME,
-    LATEST_BY_OFFSET(GENERATION) AS GENERATION,
-    LATEST_BY_OFFSET(SATISFACTION) AS SATISFACTION,
-    LATEST_BY_OFFSET(CREATED_AT) AS CREATED_AT
-FROM POSTGRES_CDCPUBLICSURVEY_RESPONDENTS
-GROUP BY RESPONDENT_ID
-;
-```
-
-
 Finally, let's join both streams and create a new Stream called `SURVEY_RESPONSES_ENRICHED` that is going to be producing messages to a new Kafka topic called `topic_survey_responses_enriched`
 
 ```SQL
@@ -274,18 +254,18 @@ WITH (
     PARTITIONS = 1
 ) AS
 SELECT
-    S.RESPONDENT_ID AS RESPONDENT_ID,
-    S.RESPONSE_ID AS RESPONSE_ID,
+    R.RESPONDENT_ID AS RESPONDENT_ID,
+    R.RESPONSE_ID AS RESPONSE_ID,
     T.NAME AS NAME,
     T.GENERATION AS GENERATION,
     T.SATISFACTION AS SATISFACTION,
-    S.QUESTION AS QUESTION,
-    S.ANSWER AS ANSWER,
-    S.IS_REAL AS IS_REAL,
-    S.CREATED_AT AS CREATED_AT
-FROM POSTGRES_CDCPUBLICSURVEY_RESPONSES S
-INNER JOIN SURVEY_RESPONDENTS T
-    ON S.RESPONDENT_ID = T.RESPONDENT_ID
+    R.QUESTION AS QUESTION,
+    R.ANSWER AS ANSWER,
+    R.IS_REAL AS IS_REAL,
+    R.CREATED_AT AS CREATED_AT
+FROM POSTGRES_CDCPUBLICSURVEY_RESPONSES R
+INNER JOIN POSTGRES_CDCPUBLICSURVEY_RESPONDENTS T WITHIN 10 MINUTES GRACE PERIOD 2 MINUTES
+    ON R.RESPONDENT_ID = T.RESPONDENT_ID
 EMIT CHANGES
 ;
 ```
