@@ -4,9 +4,9 @@
 ![architecture](/images/architecture.png)
 
 ## Project Description
-This is a Data Engineering end to end project meant to demonstrate how to unlock real-time insights from a transactional database.
+This is a Data Engineering end-to-end project demonstrating how to unlock real-time insights from a transactional database. 
 
-Unlocking real-time insights requires a streaming architecture that’s continuously ingesting, processing, and provisioning data in real time. This is where Kafka (Confluent) comes into play. Finally, a data warehouse like Snowflake comes in handy to run your analytical queries and dashboards from where you can extract insights.
+Unlocking real-time insights requires a streaming architecture that continuously ingests, processes, and provisions data in streaming. This is where Kafka (Confluent) comes into play. Finally, a data warehouse like Snowflake comes in handy to run your analytical queries and dashboards from where you can extract insights
 
 ### Why Streaming data pipelines?
 Analyzing the events in real-time ​as opposed to batch ​gives the flexibility to see outcomes as they occur or in a windowed fashion depending on the consuming application.
@@ -133,34 +133,40 @@ The data model we are going to use in this project was inspired by [this](https:
 Run this [Python Script](/aws/postgres-rds/generate_mock_data.py) to emulate transactions in real-time.
 
 ```bash
+cd aws
+
 sudo pip3 install virtualenv
 
 virtualenv pyvenv
 
 source aws/pyvenv/bin/activate
 
-pip3 install requirements.txt
+pip freeze > requirements.txt
 
-pip3 freeze
+pip install -r requirements.txt
 
-python3 aws/postgres-rds/generate_mock_data.py
+pip freeze
+pip list
+
+python aws/postgres-rds/generate_mock_data.py
 
 deactivate
 ```
 
 #### Generate Real data with a Web App
-TODO:
 
-#### Run Web App Locally
+##### Run Web App Locally
 Run the following in your local Terminal:
 ```bash
+cd aws
+
 sudo pip3 install virtualenv
 
 virtualenv pyvenv
 
 source aws/pyvenv/bin/activate
 
-pip3 install requirements.txt
+pip install -r requirements.txt
 
 cd aws/api
 
@@ -171,10 +177,26 @@ deactivate
 
 Then, visit [http://127.0.0.1:8000](http://127.0.0.1:8000) in your browser. You should see the Web App now.
 
-![local web app](/images/local_web_app.png)
+##### Deploy Web App with AWS Lambda
 
-##### Deploy Web App with API Gateway and Lambda
-TODO:
+Deploying FastAPI on AWS, Using a PostgreSQL RDS. You could deployed this App easily using a simple EC2 instance, but just for the sake of learning I decided to go serverless using a AWS Lambda function.
+
+To deploy a Python web app with AWS Lambda, simply follow these steps:
+
+- To begin, navigate to AWS Lambda and proceed to create a Lambda Layer.
+  - Now, let's create a Zip file named `python.zip` and include all the packages needed. To do so, navigate to the folder of your Python Virtual Environment and you would find them in the following route `/lib/python/site-packages`.
+  - Upload the zip file to the layer
+  - Select the required Python runtime and hit create.
+- Now, navigate to the Functions tab and create a new Function from scratch.
+  - Please choose the Python runtime, provide a name for it, and then proceed to click on the create button.
+  - Go to the bottom and add the lambda layer you've just created.
+  - Grab the needed code from this repo and add the needed code so it looks like this:
+    - ![remote web app code](/images/lambda_code.png)
+- Now let's make public the App so everyone can use it.
+  - To proceed, please go to the configuration tab and select Function URL. You can enable it without requiring any authentication services.
+  - Public URL: https://c4nmnzwd34e7byeayqqhqij6su0klfiq.lambda-url.us-east-1.on.aws/ 
+
+![remote web app](/images/remote_web_app.png)
 
 ### 4. Kafka (Confluent Cloud)
 [Confluent Platform](https://docs.confluent.io/platform/current/platform.html#what-is-confluent-used-for) lets you focus on how to derive business value from your data rather than worrying about the underlying mechanics, such as how data is being transported or integrated between disparate systems. Specifically, Confluent Platform simplifies connecting data sources to Kafka, building streaming applications, as well as securing, monitoring, and managing your Kafka infrastructure.
@@ -221,6 +243,26 @@ You should see that 2 streams were created called:
 - `POSTGRES_CDCPUBLICSURVEY_RESPONSES`
 - `POSTGRES_CDCPUBLICSURVEY_RESPONDENTS`
 
+Now, let's create a table with the respondents data. Remember that Streams are unbounded series of events, while tables are the current state of a given key.
+
+```SQL
+CREATE TABLE SURVEY_RESPONDENTS
+WITH (
+    FORMAT = 'JSON_SR'
+)
+AS
+SELECT
+    RESPONDENT_ID AS RESPONDENT_ID,
+    LATEST_BY_OFFSET(NAME) AS NAME,
+    LATEST_BY_OFFSET(GENERATION) AS GENERATION,
+    LATEST_BY_OFFSET(SATISFACTION) AS SATISFACTION,
+    LATEST_BY_OFFSET(CREATED_AT) AS CREATED_AT
+FROM POSTGRES_CDCPUBLICSURVEY_RESPONDENTS
+GROUP BY RESPONDENT_ID
+;
+```
+
+
 Finally, let's join both streams and create a new Stream called `SURVEY_RESPONSES_ENRICHED` that is going to be producing messages to a new Kafka topic called `topic_survey_responses_enriched`
 
 ```SQL
@@ -232,19 +274,20 @@ WITH (
     PARTITIONS = 1
 ) AS
 SELECT
-    R.RESPONDENT_ID AS RESPONDENT_ID,
-    R.RESPONSE_ID AS RESPONSE_ID,
+    S.RESPONDENT_ID AS RESPONDENT_ID,
+    S.RESPONSE_ID AS RESPONSE_ID,
     T.NAME AS NAME,
     T.GENERATION AS GENERATION,
     T.SATISFACTION AS SATISFACTION,
-    R.QUESTION AS QUESTION,
-    R.ANSWER AS ANSWER,
-    R.IS_REAL AS IS_REAL,
-    R.CREATED_AT AS CREATED_AT
-FROM POSTGRES_CDCPUBLICSURVEY_RESPONSES R
-INNER JOIN POSTGRES_CDCPUBLICSURVEY_RESPONDENTS T WITHIN 10 MINUTES GRACE PERIOD 2 MINUTES
-    ON R.RESPONDENT_ID = T.RESPONDENT_ID
-EMIT CHANGES;
+    S.QUESTION AS QUESTION,
+    S.ANSWER AS ANSWER,
+    S.IS_REAL AS IS_REAL,
+    S.CREATED_AT AS CREATED_AT
+FROM POSTGRES_CDCPUBLICSURVEY_RESPONSES S
+INNER JOIN SURVEY_RESPONDENTS T
+    ON S.RESPONDENT_ID = T.RESPONDENT_ID
+EMIT CHANGES
+;
 ```
 
 You can verify the resulting set by running the following query:
@@ -265,7 +308,7 @@ View entire script [here](confluent/ksql.sql)
 
 If you want to learn more about
 #### Snowflake Sink Kafka Connector
-Now, let's send the resulting data from the Kafka Topic `topic_survey_responses_enriched` to our Data Warehouse in Snowflake unlocking real-time analytics and decision-making.
+Now, let's send the resulting data from the Kafka Topic `topic_survey_responses_enriched` to our Data Warehouse in Snowflake unlocking near real-time analytics and decision-making.
 
 In order to do this, let's set up a new Kafka Connector called [Snowflake Sink Kafka Connector](https://docs.snowflake.com/en/user-guide/kafka-connector-overview) by following these steps.
 - Open Confluent Cloud.
@@ -369,3 +412,4 @@ View entire script [here](snowflake/snowflake.sql)
 - You can create awesome Data Engineering projects without paying anything as most services offer a free trial.
 - This project was intended as a PoC and it is not recommended for production environments as we are not taking care of security actions such as granular access and networking.
 - Use Terraform as Infrastructure-as-Code (IaC) tool. Use Terraform to spin up cloud resources in the cloud.
+- Use Apache Druid. Druid is a high performance, real-time analytics database that delivers sub-second queries on streaming and batch data at scale and under load.

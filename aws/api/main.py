@@ -1,12 +1,15 @@
-from fastapi import FastAPI, Request, Body, HTTPException
+from fastapi import FastAPI, Request, Body
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 import psycopg2
 import os
 from dotenv import load_dotenv
+from mangum import Mangum
 
 
 app = FastAPI()
+lambda_handler = Mangum(app)
+
 app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
 
@@ -18,6 +21,7 @@ conn = psycopg2.connect(
     password=os.getenv("POSTGRES_MASTER_PASSWORD"),
     port=os.getenv("POSTGRES_PORT"),
 )
+print("connection established")
 
 questions = [
     "I consider myself:",
@@ -38,7 +42,7 @@ async def survey(request: Request):
 
 
 @app.post("/")
-def save_survey(*, request=Body(...)):
+async def save_survey(*, request=Body(...)):
     cursor = conn.cursor()
 
     # Insert into SURVEY_RESPONDENTS

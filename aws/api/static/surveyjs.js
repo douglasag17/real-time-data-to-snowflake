@@ -52,19 +52,6 @@ surveyJSON = {
                 },
                 {
                     "type": "radiogroup",
-                    "name": "On the weekends I would rather:",
-                    "title": "On the weekends I would rather:",
-                    "isRequired": true,
-                    "choices": [
-                        {
-                            "value": "Stay at home and chill with a movie",
-                            "text": "Go out and party"
-                        },
-                        "Stay at home and chill with a movie"
-                    ]
-                },
-                {
-                    "type": "radiogroup",
                     "name": "When I eat cereal:",
                     "title": "When I eat cereal:",
                     "isRequired": true,
@@ -81,6 +68,16 @@ surveyJSON = {
                     "choices": [
                         "The Egg",
                         "The chicken"
+                    ]
+                },
+                {
+                    "type": "radiogroup",
+                    "name": "On the weekends I would rather:",
+                    "title": "On the weekends I would rather:",
+                    "isRequired": true,
+                    "choices": [
+                        "Stay at home and chill with a movie",
+                        "Go out and party"
                     ]
                 },
                 {
