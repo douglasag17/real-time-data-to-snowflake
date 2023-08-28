@@ -1,5 +1,6 @@
 # Streaming data from a transactional database to a data warehouse using Kafka (Confluent), Snowflake, and PostgreSQL.
 
+[Live demo in Spanish](https://youtu.be/OpKwk7x2Pkw?si=RT0uv-oar58dXOUe)
 ## Architecture Overview
 ![architecture](/images/architecture.png)
 
